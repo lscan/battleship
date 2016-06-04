@@ -1,0 +1,61 @@
+.controls {
+	border: 1px solid black;
+	height: 200px;
+}
+.grid {
+
+}
+.grid td {
+  border: 1px solid black;
+  height: 50px;
+  width: 50px;
+  cursor: pointer;
+  font-size: 35px;
+  text-align: center;
+}
+
+/* entire container, keeps perspective */
+.flip-container {
+	perspective: 1000px;
+}
+/* flip the pane when hovered */
+.flip-container:hover .flipper, .flip-container.hover .flipper {
+	transform: rotateY(180deg);
+}
+
+.flip-container, .front, .back {
+	/*width: 320px;
+	height: 480px;*/
+	width: 50px;
+	height: 50px;
+}
+
+/* flip speed goes here */
+.flipper {
+	transition: 0.6s;
+	transform-style: preserve-3d;
+	position: relative;
+	margin-top: -25px;
+}
+
+/* hide back of pane during swap */
+.front, .back {
+	backface-visibility: hidden;
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+/* front pane, placed above back */
+.front {
+	z-index: 2;
+	/* for firefox 31 */
+	transform: rotateY(0deg);
+	background-color: black;
+}
+
+/* back, initially hidden pane */
+.back {
+	transform: rotateY(180deg);
+	margin-top: 6px;
+}
