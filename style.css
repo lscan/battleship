@@ -2,6 +2,13 @@
 	border: 1px solid black;
 	height: 200px;
 }
+#ship-details {
+	display: none;
+}
+#error-message {
+	display: none;
+	color: tomato;
+}
 .grid {
 
 }
