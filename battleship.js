@@ -6,6 +6,21 @@ var columns = [null,'A','B','C','D','E','F','G','H','I','J'];
 var shipBeingPlaced = 0;
 var errorMessageHolder;
 
+// ****************************** game stuff ******************************
+
+// messing with stuff
+function newGame(grid1, grid2) {
+	this.grid1 = grid1;
+	this.grid2 = grid2;
+}
+newGame.prototype.turn = function() {
+	if(player1) {
+
+	} else if(player2) {
+
+	}
+}
+
 // ****************************** grid stuff ******************************
 // use vectors for grid coordinates
 function Vector(x, y) {
@@ -305,7 +320,158 @@ battleshipGame.guessLocation = function() {
 	var guessVector = new Vector(xCoord, yCoord);
 	console.log(guessVector);
 	console.log(grid.get(guessVector));
+
+	if(grid.get(guessVector) == undefined || grid.get(guessVector) == "O") {
+		console.log('miss');
+		grid.set(guessVector, 'O');
+	} else {
+		var thingAtGridSquare = grid.get(guessVector);
+		console.log(thingAtGridSquare);
+		grid.set(guessVector, 'X');
+
+		switch(thingAtGridSquare) {
+			case 'P':
+				console.log('you found a P');
+				break;
+			case 'D':
+				console.log('you found a D');
+				break;
+			case 'S':
+				console.log('you found an S');
+				break;
+			case 'B':
+				console.log('you found a B');
+				break;
+			case 'A':
+				console.log('you found an A');
+				break;
+			default:
+				console.log('wtf');
+		}
+
+	}
+
+	grid.paintBoard();
+
+	if(battleshipGame.ships.length == 0) {
+		console.log('game over');
+	}
+
 }
+
+// pass in a DOM element (a grid square) and you get its vector
+// could maybe use a lil' work
+function getVectorFromDom(elementFromDom) {
+	var thisGridSquare = elementFromDom;
+	// the way I'm getting columnLetter seems janky, but works for now
+	var columnLetter = elementFromDom.className[6];
+	var xCoord = columns.indexOf(columnLetter);
+
+	// this could probably just be an IIFE
+	var yCoord = Number(getYCoord());
+	function getYCoord() {
+		if(thisGridSquare.parentNode.id[4] != undefined) {
+			return thisGridSquare.parentNode.id[3] + thisGridSquare.parentNode.id[4];
+		} else {
+			return thisGridSquare.parentNode.id[3];
+		}
+	}
+	// var thisVector = new Vector(xCoord,yCoord);
+	return new Vector(xCoord, yCoord);
+
+}
+
+
+	// testing ship placement interface
+	// abandon hope all ye who enter here
+	function testingShit() {
+		var testSize = 5;
+		var testOrientation = false;
+
+		var thisVector = getVectorFromDom(this);
+		
+		// this belongs elsewhere
+		// if(this.classList.contains('revealed')) {
+		// 	this.className = this.className.replace(/ revealed/,'');
+		// } else {
+		// 	this.className += " revealed";
+		// }
+
+		if(testOrientation == true) {
+			// need to highlight red if part of the ship falls off the grid
+			if( grid.isInside( thisVector.plus(new Vector(testSize-1, 0)) ) == false ) {
+				// iterate through each grid square
+				for(var i=0; i<testSize; i++) {
+					// get the next (or first for the first time through (since we're starting at i=0)) grid square
+					var nextSquare = thisVector.plus( new Vector(i,0) );
+					if(grid.isInside(nextSquare) == true) {
+						var nextSquareRow = "row" + nextSquare.y;
+						var nextSquareColumn = "column" + columns[nextSquare.x];
+						var getNextSquareRow = document.getElementById(nextSquareRow);
+						var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
+						console.log(getNextSquareColumn);
+						if(getNextSquareColumn.length != 0) {
+							var testFront = getNextSquareColumn[0].getElementsByClassName('front');
+							testFront[0].style.backgroundColor = "red";
+						}
+					} else {break;}
+				}
+			}
+			// otherwise highlight the whole ship
+			else {
+				for(var i=0; i<testSize; i++) {
+					var nextSquare = thisVector.plus( new Vector(i,0) );
+					var nextSquareRow = "row" + nextSquare.y;
+					var nextSquareColumn = "column" + columns[nextSquare.x];
+					var getNextSquareRow = document.getElementById(nextSquareRow);
+					var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
+					console.log(getNextSquareColumn);
+					var testFront = getNextSquareColumn[0].getElementsByClassName('front');
+					testFront[0].style.backgroundColor = "yellow";
+				}
+			}
+		} else if(testOrientation == false) {
+			// need to highlight red if you can't
+			if( grid.isInside( thisVector.plus(new Vector(0,testSize-1)) ) == false ) {
+				for(var i=0; i<testSize; i++) {
+					var nextSquare = thisVector.plus( new Vector(0,i) );
+					if(grid.isInside(nextSquare) == true) {
+						var nextSquare = thisVector.plus( new Vector(0,i) );
+						var nextSquareRow = "row" + nextSquare.y;
+						var nextSquareColumn = "column" + columns[nextSquare.x];
+						var getNextSquareRow = document.getElementById(nextSquareRow);
+						if(getNextSquareRow) {
+							var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
+							console.log(getNextSquareColumn);
+							var testFront = getNextSquareColumn[0].getElementsByClassName('front');
+							testFront[0].style.backgroundColor = "red";
+						}
+					} else {break;}
+				}
+			}
+			else {
+				// highlight shit
+				for(var i=0; i<testSize; i++) {
+					var nextSquare = thisVector.plus( new Vector(0,i) );
+					var nextSquareRow = "row" + nextSquare.y;
+					var nextSquareColumn = "column" + columns[nextSquare.x];
+					var getNextSquareRow = document.getElementById(nextSquareRow);
+					var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
+					console.log(getNextSquareColumn);
+					var testFront = getNextSquareColumn[0].getElementsByClassName('front');
+					testFront[0].style.backgroundColor = "yellow";
+				}
+			}
+		}
+	} // end testingShit()
+
+	function testingMoreShit() {
+		var gridSquaresLocal = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
+		for(var i=0; i<gridSquaresLocal.length; i++) {
+			var thisGridSquareLocal = gridSquaresLocal[i].getElementsByClassName('front');
+			thisGridSquareLocal[0].style.backgroundColor = "black";
+		}
+	}
 
 // ****************************** DOM stuff ******************************
 
@@ -321,11 +487,12 @@ window.onload = function() {
 		// for a standard 10x10 game
 		grid = new Grid(10,10);
 		var ship1 = new PatrolBoat();
-		var ship2 = new Destroyer();
-		var ship3 = new Submarine();
-		var ship4 = new Battleship();
-		var ship5 = new AircraftCarrier();
-		battleshipGame.ships = [ship1, ship2, ship3, ship4, ship5];
+		// var ship2 = new Destroyer();
+		// var ship3 = new Submarine();
+		// var ship4 = new Battleship();
+		// var ship5 = new AircraftCarrier();
+		// battleshipGame.ships = [ship1, ship2, ship3, ship4, ship5];
+		battleshipGame.ships = [ship1];
 		// shipBeingPlaced is the variable that places the current ship we're on
 		// it's incremented by 1 when a ship is successfully set on the grid
 		// it's used as the index for the battleshipGame.ships array
@@ -338,6 +505,9 @@ window.onload = function() {
 	var gridSquares = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
 	for(var i=0; i<gridSquares.length; i++) {
 		gridSquares[i].addEventListener('click', battleshipGame.guessLocation);
+		// testing
+		gridSquares[i].addEventListener('mouseenter', testingShit);
+		gridSquares[i].addEventListener('mouseleave', testingMoreShit);
 	}
 
 }

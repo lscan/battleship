@@ -25,8 +25,12 @@
 .flip-container {
 	perspective: 1000px;
 }
+
 /* flip the pane when hovered */
-.flip-container:hover .flipper, .flip-container.hover .flipper {
+/*.flip-container:hover .flipper, .flip-container.hover .flipper {
+	transform: rotateY(180deg);
+}*/
+.flip-container.revealed .flipper  {
 	transform: rotateY(180deg);
 }
 
@@ -59,6 +63,9 @@
 	/* for firefox 31 */
 	transform: rotateY(0deg);
 	background-color: black;
+}
+.front:hover {
+	/*background-color: yellow;*/
 }
 
 /* back, initially hidden pane */
