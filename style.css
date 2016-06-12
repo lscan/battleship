@@ -64,9 +64,6 @@
 	transform: rotateY(0deg);
 	background-color: black;
 }
-.front:hover {
-	/*background-color: yellow;*/
-}
 
 /* back, initially hidden pane */
 .back {
