@@ -101,7 +101,7 @@ Ship.prototype.placeShip = function(startingVector) {
 				grid.isInside( startingVector.plus(new Vector(this.size-1, 0)) ) == true ) {
 
 			// if yes, is there anything in the way of where we're trying to place it?
-			for(var i=0; i<startingVector.x+this.size; i++) {
+			for(var i=0; i<startingVector.x+this.size-1; i++) {
 				if( grid.get( startingVector.plus( new Vector(i,0) ) ) != undefined ) {
 					console.log("There's something in the way");
 					console.log( grid.get( startingVector.plus( new Vector(i,0) ) ) );
@@ -146,7 +146,7 @@ Ship.prototype.placeShip = function(startingVector) {
 				grid.isInside( startingVector.plus(new Vector(0, this.size-1)) ) == true ) {
 			
 			// if yes, is there anything in the way of where we're trying to place it?
-			for(var i=0; i<startingVector.y+this.size; i++) {
+			for(var i=0; i<startingVector.y+this.size-1; i++) {
 				if( grid.get( startingVector.plus( new Vector(0,i) ) ) != undefined ) {
 					console.log("There's something in the way: ");
 					console.log( grid.get( startingVector.plus( new Vector(i,0) ) ) );
