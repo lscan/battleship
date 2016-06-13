@@ -195,8 +195,44 @@ Ship.prototype.placeShip = function(startingVector) {
 // add this to the battleshipGame object?
 // function to grab user input from the DOM, create the ship, and then place the ship in the grid
 function createShip(ship) {
+	function paintShipInDOM(classToAdd, permanent) {
+		ship.startingVector = currentStartingVector;
+		// for horizontal
+		if(ship.horizontalOrientation == true) {
+			// can create a function for this to make DRY
+			for(var i=0; i<currenShipSize; i++) {
+				var nextSquare = ship.startingVector.plus( new Vector(i,0) );
+				var nextSquareRow = "row" + nextSquare.y;
+				var nextSquareColumn = "column" + columns[nextSquare.x];
+				var getNextSquareRow = document.getElementById(nextSquareRow);
+				var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
+				var testFront = getNextSquareColumn[0].getElementsByClassName('front');
+				testFront[0].className += " " + classToAdd;
+				if(permanent == true) {
+					testFront[0].innerHTML = ship.symbol;
+				}
+			}
+		}
+		// for vertical
+		else if(ship.horizontalOrientation == false) {
+			for(var i=0; i<currenShipSize; i++) {
+				var nextSquare = ship.startingVector.plus( new Vector(0,i) );
+				var nextSquareRow = "row" + nextSquare.y;
+				var nextSquareColumn = "column" + columns[nextSquare.x];
+				var getNextSquareRow = document.getElementById(nextSquareRow);
+				var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
+				var testFront = getNextSquareColumn[0].getElementsByClassName('front');
+				testFront[0].className += " " + classToAdd;
+				if(permanent == true) {
+					testFront[0].innerHTML = ship.symbol;
+				}
+			}
+		}
+	}
+
 	// on click this value will reset to whichever grid vector was clicked
 	var currentStartingVector;
+	ship.horizontalOrientation = true;
 
 	// for changing ship orientation on button click in form
 	var buttonHorizontal = document.getElementById('button-horizontal');
@@ -227,6 +263,14 @@ function createShip(ship) {
 	function listenerFuncForGetVector() {
 		currentStartingVector = getVectorFromDom(this);
 		console.log(currentStartingVector);
+		// this removes temporarily placed ships from the grid
+		// I feel like this snippet is getting repeated quite a bit
+		var gridSquaresLocal = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
+		for(var i=0; i<gridSquaresLocal.length; i++) {
+			var thisGridSquareLocal = gridSquaresLocal[i].getElementsByClassName('front');
+			thisGridSquareLocal[0].className = thisGridSquareLocal[0].className.replace(/placed-ship-temporary/,'');
+		}
+		paintShipInDOM('placed-ship-temporary', false);
 	}
 
 	for(var i=0; i<gridSquares.length; i++) {
@@ -278,7 +322,12 @@ function createShip(ship) {
 		ship.startingVector = currentStartingVector;
 		ship.horizontalOrientation = currentShipOrientation;
 		ship.placeShip(ship.startingVector);
-		paintShipInDOM();
+		var gridSquaresLocal = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
+		for(var i=0; i<gridSquaresLocal.length; i++) {
+			var thisGridSquareLocal = gridSquaresLocal[i].getElementsByClassName('front');
+			thisGridSquareLocal[0].className = thisGridSquareLocal[0].className.replace(/placed-ship-temporary/,'');
+		}
+		paintShipInDOM('placed-ship', true);
 
 
 		// should we try to place the next ship?
@@ -292,36 +341,6 @@ function createShip(ship) {
 			document.getElementById('ship-details').style.display = 'none';
 			// paint the grid
 			grid.paintBoard();
-		}
-
-		function paintShipInDOM() {
-			// for horizontal
-			if(ship.horizontalOrientation == true) {
-				// can create a function for this to make DRY
-				for(var i=0; i<currenShipSize; i++) {
-					var nextSquare = ship.startingVector.plus( new Vector(i,0) );
-					var nextSquareRow = "row" + nextSquare.y;
-					var nextSquareColumn = "column" + columns[nextSquare.x];
-					var getNextSquareRow = document.getElementById(nextSquareRow);
-					var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
-					var testFront = getNextSquareColumn[0].getElementsByClassName('front');
-					testFront[0].className += " placed-ship";
-					testFront[0].innerHTML = ship.symbol;
-				}
-			}
-			// for vertical
-			else if(ship.horizontalOrientation == false) {
-				for(var i=0; i<currenShipSize; i++) {
-					var nextSquare = ship.startingVector.plus( new Vector(0,i) );
-					var nextSquareRow = "row" + nextSquare.y;
-					var nextSquareColumn = "column" + columns[nextSquare.x];
-					var getNextSquareRow = document.getElementById(nextSquareRow);
-					var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
-					var testFront = getNextSquareColumn[0].getElementsByClassName('front');
-					testFront[0].className += " placed-ship";
-					testFront[0].innerHTML = ship.symbol;
-				}
-			}
 		}
 
 	}
@@ -441,6 +460,7 @@ battleshipGame.guessLocation = function() {
 
 // ship placement on DOM grid
 battleshipGame.beginPlacement = function() {
+
 	grid = new Grid(10,10);
 	var ship1 = new PatrolBoat();
 	var ship2 = new Destroyer();
