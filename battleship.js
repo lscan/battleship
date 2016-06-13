@@ -262,15 +262,17 @@ function createShip(ship) {
 	// I had to name this function because you can't remove a listener for an anonymous function
 	function listenerFuncForGetVector() {
 		currentStartingVector = getVectorFromDom(this);
-		console.log(currentStartingVector);
-		// this removes temporarily placed ships from the grid
-		// I feel like this snippet is getting repeated quite a bit
-		var gridSquaresLocal = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
-		for(var i=0; i<gridSquaresLocal.length; i++) {
-			var thisGridSquareLocal = gridSquaresLocal[i].getElementsByClassName('front');
-			thisGridSquareLocal[0].className = thisGridSquareLocal[0].className.replace(/placed-ship-temporary/,'');
+		if(somethingInTheWay == false) {
+			console.log(currentStartingVector);
+			// this removes temporarily placed ships from the grid
+			// I feel like this snippet is getting repeated quite a bit
+			var gridSquaresLocal = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
+			for(var i=0; i<gridSquaresLocal.length; i++) {
+				var thisGridSquareLocal = gridSquaresLocal[i].getElementsByClassName('front');
+				thisGridSquareLocal[0].className = thisGridSquareLocal[0].className.replace(/placed-ship-temporary/,'');
+			}
+			paintShipInDOM('placed-ship-temporary', false);
 		}
-		paintShipInDOM('placed-ship-temporary', false);
 	}
 
 	for(var i=0; i<gridSquares.length; i++) {
@@ -285,64 +287,67 @@ function createShip(ship) {
 	// function that runs on click of the place ship button
 	function submitShipDetailsClick() {
 		
-		// remove the listener on the button, or else madness
-		submitShipDetails.removeEventListener('click', submitShipDetailsClick);
-		// remove some other listeners
-		for(var i=0; i<gridSquares.length; i++) {
-			gridSquares[i].removeEventListener('mouseenter', placeHighlight);
-			gridSquares[i].removeEventListener('mouseleave', removeHighlight);
-			gridSquares[i].removeEventListener('click', listenerFuncForGetVector);
-		}
+		console.log(somethingInTheWay);
+		if(somethingInTheWay == false) {
 
-		// reset any previous error message from trying to place a ship
-		errorMessageHolder.style.display = 'none';
-		errorMessageHolder.innerHTML ='';
+			// remove the listener on the button, or else madness
+			submitShipDetails.removeEventListener('click', submitShipDetailsClick);
+			// remove some other listeners
+			for(var i=0; i<gridSquares.length; i++) {
+				gridSquares[i].removeEventListener('mouseenter', placeHighlight);
+				gridSquares[i].removeEventListener('mouseleave', removeHighlight);
+				gridSquares[i].removeEventListener('click', listenerFuncForGetVector);
+			}
 
-		// get the vector coordinates and ship orientation from user input
-		var startingX = currentStartingVector.x;
-		var startingY = currentStartingVector.y;
-		var shipOrientationRadios = document.getElementsByName('orientation');
-		// currentShipOrientation = true;
-		// for(var i=0; i<shipOrientationRadios.length; i++) {
-		// 	if(shipOrientationRadios[i].checked) {
-		// 		currentShipOrientation = shipOrientationRadios[i].value;
-		// 		break;
-		// 	}
-		// }
-		// convert string to boolean for ship orientation
-		if(currentShipOrientation == "true") {
+			// reset any previous error message from trying to place a ship
+			errorMessageHolder.style.display = 'none';
+			errorMessageHolder.innerHTML ='';
+
+			// get the vector coordinates and ship orientation from user input
+			var startingX = currentStartingVector.x;
+			var startingY = currentStartingVector.y;
+			var shipOrientationRadios = document.getElementsByName('orientation');
 			// currentShipOrientation = true;
-			this.horizontalOrientation = true;
-		} else {
-			// currentShipOrientation = false;
-			this.horizontalOrientation = false;
-		}
+			// for(var i=0; i<shipOrientationRadios.length; i++) {
+			// 	if(shipOrientationRadios[i].checked) {
+			// 		currentShipOrientation = shipOrientationRadios[i].value;
+			// 		break;
+			// 	}
+			// }
+			// convert string to boolean for ship orientation
+			if(currentShipOrientation == "true") {
+				// currentShipOrientation = true;
+				this.horizontalOrientation = true;
+			} else {
+				// currentShipOrientation = false;
+				this.horizontalOrientation = false;
+			}
 
-		// place the ship
-		ship.startingVector = currentStartingVector;
-		ship.horizontalOrientation = currentShipOrientation;
-		ship.placeShip(ship.startingVector);
-		var gridSquaresLocal = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
-		for(var i=0; i<gridSquaresLocal.length; i++) {
-			var thisGridSquareLocal = gridSquaresLocal[i].getElementsByClassName('front');
-			thisGridSquareLocal[0].className = thisGridSquareLocal[0].className.replace(/placed-ship-temporary/,'');
-		}
-		paintShipInDOM('placed-ship', true);
+			// place the ship
+			ship.startingVector = currentStartingVector;
+			ship.horizontalOrientation = currentShipOrientation;
+			ship.placeShip(ship.startingVector);
+			var gridSquaresLocal = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
+			for(var i=0; i<gridSquaresLocal.length; i++) {
+				var thisGridSquareLocal = gridSquaresLocal[i].getElementsByClassName('front');
+				thisGridSquareLocal[0].className = thisGridSquareLocal[0].className.replace(/placed-ship-temporary/,'');
+			}
+			paintShipInDOM('placed-ship', true);
 
 
-		// should we try to place the next ship?
-		if(shipBeingPlaced < battleshipGame.ships.length) {
-			// yes, place the next ship
-			createShip(battleshipGame.ships[shipBeingPlaced]);
+			// should we try to place the next ship?
+			if(shipBeingPlaced < battleshipGame.ships.length) {
+				// yes, place the next ship
+				createShip(battleshipGame.ships[shipBeingPlaced]);
+			}
+			else if(shipBeingPlaced == battleshipGame.ships.length) {
+				// no, no more ships to place
+				// hide the form input section
+				document.getElementById('ship-details').style.display = 'none';
+				// paint the grid
+				grid.paintBoard();
+			}
 		}
-		else if(shipBeingPlaced == battleshipGame.ships.length) {
-			// no, no more ships to place
-			// hide the form input section
-			document.getElementById('ship-details').style.display = 'none';
-			// paint the grid
-			grid.paintBoard();
-		}
-
 	}
 	// re-add the listener for the next ship
 	submitShipDetails.addEventListener('click', submitShipDetailsClick);
@@ -389,12 +394,6 @@ AircraftCarrier.prototype = Object.create(Ship.prototype);
 
 // ****************************** turn stuff ******************************
 
-// coming back to this
-// function Turn() {}
-// Turn.prototype.guessLocation = function(e) {
-// 	e.preventDefault();
-// 	console.log(this);
-// }
 battleshipGame.guessLocation = function() {
 	// I created the thisGridSquare variable for the getYCoord function, which...
 	// ...returns the Y coordinate of the grid square that's clicked
@@ -460,6 +459,7 @@ battleshipGame.guessLocation = function() {
 
 // ship placement on DOM grid
 battleshipGame.beginPlacement = function() {
+	var somethingInTheWay = false;
 
 	grid = new Grid(10,10);
 	var ship1 = new PatrolBoat();
@@ -490,94 +490,120 @@ function getVectorFromDom(elementFromDom) {
 			return thisGridSquare.parentNode.id[3];
 		}
 	}
-	// var thisVector = new Vector(xCoord,yCoord);
 	return new Vector(xCoord, yCoord);
 
 }
 
+// abandon hope all ye who enter here
+function placeHighlight() {
 
-	// testing ship placement interface
-	// abandon hope all ye who enter here
-	function placeHighlight() {
+	somethingInTheWay = false;
+	var thisVector = getVectorFromDom(this);
 
-		var thisVector = getVectorFromDom(this);
-
-		if(currentShipOrientation == true) {
-			// need to highlight red if part of the ship falls off the grid
-			if( grid.isInside( thisVector.plus(new Vector(currenShipSize-1, 0)) ) == false ) {
-				// iterate through each grid square
-				for(var i=0; i<currenShipSize; i++) {
-					// get the next (or first for the first time through (since we're starting at i=0)) grid square
-					var nextSquare = thisVector.plus( new Vector(i,0) );
-					if(grid.isInside(nextSquare) == true) {
-						var nextSquareRow = "row" + nextSquare.y;
-						var nextSquareColumn = "column" + columns[nextSquare.x];
-						var getNextSquareRow = document.getElementById(nextSquareRow);
-						var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
-						// console.log(getNextSquareColumn);
-						if(getNextSquareColumn.length != 0) {
-							var testFront = getNextSquareColumn[0].getElementsByClassName('front');
-							testFront[0].style.backgroundColor = "red";
-						}
-					} else {break;}
-				}
-			}
-			// otherwise highlight the whole ship
-			else {
-				for(var i=0; i<currenShipSize; i++) {
-					var nextSquare = thisVector.plus( new Vector(i,0) );
+	if(currentShipOrientation == true) {
+		// need to highlight red if part of the ship falls off the grid
+		if( grid.isInside( thisVector.plus(new Vector(currenShipSize-1, 0)) ) == false ) {
+			// iterate through each grid square
+			for(var i=0; i<currenShipSize; i++) {
+				// get the next (or first for the first time through (since we're starting at i=0)) grid square
+				var nextSquare = thisVector.plus( new Vector(i,0) );
+				if(grid.isInside(nextSquare) == true) {
 					var nextSquareRow = "row" + nextSquare.y;
 					var nextSquareColumn = "column" + columns[nextSquare.x];
 					var getNextSquareRow = document.getElementById(nextSquareRow);
 					var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
 					// console.log(getNextSquareColumn);
-					var testFront = getNextSquareColumn[0].getElementsByClassName('front');
-					testFront[0].style.backgroundColor = "yellow";
-				}
-			}
-		} else if(currentShipOrientation == false) {
-			// need to highlight red if you can't
-			if( grid.isInside( thisVector.plus(new Vector(0,currenShipSize-1)) ) == false ) {
-				for(var i=0; i<currenShipSize; i++) {
-					var nextSquare = thisVector.plus( new Vector(0,i) );
-					if(grid.isInside(nextSquare) == true) {
-						var nextSquare = thisVector.plus( new Vector(0,i) );
-						var nextSquareRow = "row" + nextSquare.y;
-						var nextSquareColumn = "column" + columns[nextSquare.x];
-						var getNextSquareRow = document.getElementById(nextSquareRow);
-						if(getNextSquareRow) {
-							var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
-							// console.log(getNextSquareColumn);
-							var testFront = getNextSquareColumn[0].getElementsByClassName('front');
-							testFront[0].style.backgroundColor = "red";
-						}
-					} else {break;}
-				}
-			}
-			else {
-				// highlight shit
-				for(var i=0; i<currenShipSize; i++) {
-					var nextSquare = thisVector.plus( new Vector(0,i) );
-					var nextSquareRow = "row" + nextSquare.y;
-					var nextSquareColumn = "column" + columns[nextSquare.x];
-					var getNextSquareRow = document.getElementById(nextSquareRow);
-					var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
-					// console.log(getNextSquareColumn);
-					var testFront = getNextSquareColumn[0].getElementsByClassName('front');
-					testFront[0].style.backgroundColor = "yellow";
-				}
+					if(getNextSquareColumn.length != 0) {
+						var testFront = getNextSquareColumn[0].getElementsByClassName('front');
+						testFront[0].style.backgroundColor = "red";
+					}
+				} else {break;}
 			}
 		}
-	} // end placeHighlight()
+		// otherwise look to see if anything is in the way
+		else {
+			for(var i=0; i<currenShipSize; i++) {
+				if (grid.get(thisVector.plus( new Vector(i,0) )) != undefined) {
+					somethingInTheWay = true;
+					break;
+				}
+			}
 
-	// function for removing background color of ships that are no longer being highlighted during placement
-	function removeHighlight() {
-		var gridSquaresLocal = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
-		for(var i=0; i<gridSquaresLocal.length; i++) {
-			var thisGridSquareLocal = gridSquaresLocal[i].getElementsByClassName('front');
-			thisGridSquareLocal[0].style.backgroundColor = "black";
+			// otherwise highlight the whole ship
+			for(var i=0; i<currenShipSize; i++) {
+				var nextSquare = thisVector.plus( new Vector(i,0) );
+				var nextSquareRow = "row" + nextSquare.y;
+				var nextSquareColumn = "column" + columns[nextSquare.x];
+				var getNextSquareRow = document.getElementById(nextSquareRow);
+				var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
+				var testFront = getNextSquareColumn[0].getElementsByClassName('front');
+				// highlight red
+				if(somethingInTheWay == true) {
+					testFront[0].style.backgroundColor = "red";
+				}
+				// highlight yellow
+				else {
+					testFront[0].style.backgroundColor = "yellow";
+				}
+			}
 		}
 	}
+	else if(currentShipOrientation == false) {
+		// need to highlight red if you can't
+		if( grid.isInside( thisVector.plus(new Vector(0,currenShipSize-1)) ) == false ) {
+			for(var i=0; i<currenShipSize; i++) {
+				var nextSquare = thisVector.plus( new Vector(0,i) );
+				if(grid.isInside(nextSquare) == true) {
+					var nextSquare = thisVector.plus( new Vector(0,i) );
+					var nextSquareRow = "row" + nextSquare.y;
+					var nextSquareColumn = "column" + columns[nextSquare.x];
+					var getNextSquareRow = document.getElementById(nextSquareRow);
+					if(getNextSquareRow) {
+						var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
+						// console.log(getNextSquareColumn);
+						var testFront = getNextSquareColumn[0].getElementsByClassName('front');
+						testFront[0].style.backgroundColor = "red";
+					}
+				} else {break;}
+			}
+		}
+		else {
+			for(var i=0; i<currenShipSize; i++) {
+				if (grid.get(thisVector.plus( new Vector(0,i) )) != undefined) {
+					somethingInTheWay = true;
+					break;
+				}
+			}
+
+			// highlight shit
+			for(var i=0; i<currenShipSize; i++) {
+				var nextSquare = thisVector.plus( new Vector(0,i) );
+				var nextSquareRow = "row" + nextSquare.y;
+				var nextSquareColumn = "column" + columns[nextSquare.x];
+				var getNextSquareRow = document.getElementById(nextSquareRow);
+				var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
+				var testFront = getNextSquareColumn[0].getElementsByClassName('front');
+				// highlight red
+				if(somethingInTheWay == true) {
+					testFront[0].style.backgroundColor = "red";
+				}
+				// highlight yellow
+				else {
+					testFront[0].style.backgroundColor = "yellow";
+				}
+			}
+		}
+	}
+} // end placeHighlight()
+
+// function for removing background color of ships that are no longer being highlighted during placement
+function removeHighlight() {
+	var gridSquaresLocal = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
+	for(var i=0; i<gridSquaresLocal.length; i++) {
+		var thisGridSquareLocal = gridSquaresLocal[i].getElementsByClassName('front');
+		thisGridSquareLocal[0].style.backgroundColor = "black";
+	}
+}
 
 // ****************************** DOM stuff ******************************
 
