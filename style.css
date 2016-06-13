@@ -70,3 +70,7 @@
 	transform: rotateY(180deg);
 	margin-top: 6px;
 }
+.front.placed-ship {
+	/*  ¯\_(ツ)_/¯  */
+	background-color: blue!important;
+}
