@@ -200,7 +200,7 @@ function createShip(ship) {
 		// for horizontal
 		if(ship.horizontalOrientation == true) {
 			// can create a function for this to make DRY
-			for(var i=0; i<currenShipSize; i++) {
+			for(var i=0; i<currentShipSize; i++) {
 				var nextSquare = ship.startingVector.plus( new Vector(i,0) );
 				var nextSquareRow = "row" + nextSquare.y;
 				var nextSquareColumn = "column" + columns[nextSquare.x];
@@ -215,7 +215,7 @@ function createShip(ship) {
 		}
 		// for vertical
 		else if(ship.horizontalOrientation == false) {
-			for(var i=0; i<currenShipSize; i++) {
+			for(var i=0; i<currentShipSize; i++) {
 				var nextSquare = ship.startingVector.plus( new Vector(0,i) );
 				var nextSquareRow = "row" + nextSquare.y;
 				var nextSquareColumn = "column" + columns[nextSquare.x];
@@ -245,9 +245,20 @@ function createShip(ship) {
 		currentShipOrientation = false;
 		ship.horizontalOrientation = false;
 	});
+	document.addEventListener('keydown', function(e) {
+		if(e.which == 32) {
+			if(currentShipOrientation == true) {
+				currentShipOrientation = false;
+				ship.horizontalOrientation = false;
+			} else if(currentShipOrientation == false) {
+				currentShipOrientation = true;
+				ship.horizontalOrientation = true;
+			}
+		}
+	});
 
 	currentShipOrientation = true;
-	currenShipSize = ship.size;
+	currentShipSize = ship.size;
 
 	// show form stuff
 	// add relevant info about the ship that's being placed into the ship details section and then display that section
@@ -459,6 +470,7 @@ battleshipGame.guessLocation = function() {
 
 // ship placement on DOM grid
 battleshipGame.beginPlacement = function() {
+	this.blur();
 	var somethingInTheWay = false;
 
 	grid = new Grid(10,10);
@@ -495,101 +507,108 @@ function getVectorFromDom(elementFromDom) {
 }
 
 // abandon hope all ye who enter here
+// this function highlights in yellow any grid squares where you're trying to place a ship
 function placeHighlight() {
 
+	// var for whether or not something is in the way of where you're trying to place a ship
 	somethingInTheWay = false;
+	// current vector of where you're placing ship
+	// this gets updated in the various loops below
 	var thisVector = getVectorFromDom(this);
 
+	// if this is a horizontal ship
 	if(currentShipOrientation == true) {
 		// need to highlight red if part of the ship falls off the grid
-		if( grid.isInside( thisVector.plus(new Vector(currenShipSize-1, 0)) ) == false ) {
-			// iterate through each grid square
-			for(var i=0; i<currenShipSize; i++) {
-				// get the next (or first for the first time through (since we're starting at i=0)) grid square
-				var nextSquare = thisVector.plus( new Vector(i,0) );
-				if(grid.isInside(nextSquare) == true) {
-					var nextSquareRow = "row" + nextSquare.y;
-					var nextSquareColumn = "column" + columns[nextSquare.x];
-					var getNextSquareRow = document.getElementById(nextSquareRow);
-					var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
-					// console.log(getNextSquareColumn);
-					if(getNextSquareColumn.length != 0) {
-						var testFront = getNextSquareColumn[0].getElementsByClassName('front');
-						testFront[0].style.backgroundColor = "red";
-					}
-				} else {break;}
+		if( grid.isInside( thisVector.plus(new Vector(currentShipSize-1, 0)) ) == false ) {
+			// iterate through each grid square of the ship
+			for(var i=0; i<currentShipSize; i++) {
+				// update the grid square we're looking at as we loop through
+				var currentGridSquare = getGridSquare(thisVector, true, i);
+				// if the grid square is on the grid, set the color to red
+				if(currentGridSquare != undefined) {
+					currentGridSquare.style.backgroundColor = 'red';
+				}
 			}
 		}
-		// otherwise look to see if anything is in the way
+		// the whole ship is inside the grid
+		// now we check to see if there's anything in the way of placing the ship
 		else {
-			for(var i=0; i<currenShipSize; i++) {
+			// iterate through each grid square of the ship
+			for(var i=0; i<currentShipSize; i++) {
+				// if we don't get an undefined response from the grid.get() method, it means there's something in the way
 				if (grid.get(thisVector.plus( new Vector(i,0) )) != undefined) {
+					// set somethingInTheWay to true
 					somethingInTheWay = true;
+					// this is just for troubleshooting, but I'm logging the vector where we're hitting something
+					if(somethingInTheWay == true) {
+						console.log(thisVector.plus( new Vector(i,0) ));
+					}
+					// no need to loop any longer because there was something in the way
 					break;
 				}
 			}
 
-			// otherwise highlight the whole ship
-			for(var i=0; i<currenShipSize; i++) {
-				var nextSquare = thisVector.plus( new Vector(i,0) );
-				var nextSquareRow = "row" + nextSquare.y;
-				var nextSquareColumn = "column" + columns[nextSquare.x];
-				var getNextSquareRow = document.getElementById(nextSquareRow);
-				var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
-				var testFront = getNextSquareColumn[0].getElementsByClassName('front');
-				// highlight red
+			// now highlight the whole ship red or yellow, depending on if something was in the way
+			// iterate through each grid square of the ship
+			for(var i=0; i<currentShipSize; i++) {
+				// the square we're looking at as we loop through
+				var currentGridSquare = getGridSquare(thisVector, true, i);
+				// highlight red because something's in the way
 				if(somethingInTheWay == true) {
-					testFront[0].style.backgroundColor = "red";
+					currentGridSquare.style.backgroundColor = "red";
 				}
-				// highlight yellow
+				// highlight yellow because you're good to go
 				else {
-					testFront[0].style.backgroundColor = "yellow";
+					currentGridSquare.style.backgroundColor = "yellow";
 				}
 			}
 		}
 	}
+	// if this is a vertical ship
 	else if(currentShipOrientation == false) {
-		// need to highlight red if you can't
-		if( grid.isInside( thisVector.plus(new Vector(0,currenShipSize-1)) ) == false ) {
-			for(var i=0; i<currenShipSize; i++) {
-				var nextSquare = thisVector.plus( new Vector(0,i) );
-				if(grid.isInside(nextSquare) == true) {
-					var nextSquare = thisVector.plus( new Vector(0,i) );
-					var nextSquareRow = "row" + nextSquare.y;
-					var nextSquareColumn = "column" + columns[nextSquare.x];
-					var getNextSquareRow = document.getElementById(nextSquareRow);
-					if(getNextSquareRow) {
-						var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
-						// console.log(getNextSquareColumn);
-						var testFront = getNextSquareColumn[0].getElementsByClassName('front');
-						testFront[0].style.backgroundColor = "red";
-					}
-				} else {break;}
+		// need to highlight red if part of the ship falls off the grid
+		if( grid.isInside( thisVector.plus(new Vector(0,currentShipSize-1)) ) == false ) {
+			// iterate through each grid square of the ship
+			for(var i=0; i<currentShipSize; i++) {
+				// update the grid square we're looking at as we loop through
+				var currentGridSquare = getGridSquare(thisVector, false, i);
+				// if the grid square is on the grid, set the color to red
+				if(currentGridSquare != undefined) {
+					currentGridSquare.style.backgroundColor = "red";
+				}
 			}
 		}
+		// the whole ship is inside the grid
+		// now we check to see if there's anything in the way of placing the ship
 		else {
-			for(var i=0; i<currenShipSize; i++) {
+			// iterate through each grid square of the ship
+			for(var i=0; i<currentShipSize; i++) {
+				// if we don't get an undefined response from the grid.get() method, it means there's something in the way
+				// bug?
 				if (grid.get(thisVector.plus( new Vector(0,i) )) != undefined) {
+					// set somethingInTheWay to true
 					somethingInTheWay = true;
+					// this is just for troubleshooting, but I'm logging the vector where we're hitting something
+					if(somethingInTheWay == true) {
+						console.log(thisVector.plus( new Vector(0,i) ));
+					}
+					// no need to loop any longer because there was something in the way
 					break;
 				}
 			}
 
-			// highlight shit
-			for(var i=0; i<currenShipSize; i++) {
-				var nextSquare = thisVector.plus( new Vector(0,i) );
-				var nextSquareRow = "row" + nextSquare.y;
-				var nextSquareColumn = "column" + columns[nextSquare.x];
-				var getNextSquareRow = document.getElementById(nextSquareRow);
-				var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
-				var testFront = getNextSquareColumn[0].getElementsByClassName('front');
-				// highlight red
+			// now highlight the whole ship red or yellow, depending on if something was in the way
+			// iterate through each grid square of the ship
+			for(var i=0; i<currentShipSize; i++) {
+				// the square we're looking at as we loop through
+				var currentGridSquare = getGridSquare(thisVector, false, i);
+				// highlight red because something's in the way
 				if(somethingInTheWay == true) {
-					testFront[0].style.backgroundColor = "red";
+					currentGridSquare.style.backgroundColor = "red";
 				}
-				// highlight yellow
+				// highlight yellow because you're good to go
 				else {
-					testFront[0].style.backgroundColor = "yellow";
+					currentGridSquare.style.backgroundColor = "yellow";
 				}
 			}
 		}
@@ -602,6 +621,44 @@ function removeHighlight() {
 	for(var i=0; i<gridSquaresLocal.length; i++) {
 		var thisGridSquareLocal = gridSquaresLocal[i].getElementsByClassName('front');
 		thisGridSquareLocal[0].style.backgroundColor = "black";
+	}
+}
+
+// this function is used inside a loop to get all DOM grid squares that are being highlighted
+// namely, this is used several times in the placeHighlight() function
+// could probably scope it only to that function
+function getGridSquare(startingVector, isHorizontal, iterator) {
+	var vectorToAdd;
+	if(isHorizontal == true) {
+		vectorToAdd = new Vector(iterator,0);
+	} else if(isHorizontal == false) {
+		vectorToAdd = new Vector(0,iterator);
+	}
+	var nextSquare = startingVector.plus(vectorToAdd);
+	// if the square is inside the grid
+	if(grid.isInside(nextSquare) == true) {
+		var nextSquareRow = "row" + nextSquare.y;
+		var nextSquareColumn = "column" + columns[nextSquare.x];
+		var getNextSquareRow = document.getElementById(nextSquareRow);
+		var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
+		// if horizontal
+		if(isHorizontal == true) {
+			// if there's another square horizontally
+			if(getNextSquareColumn.length != 0) {
+				var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
+				// return the square
+				return getNextSquareColumn[0].getElementsByClassName('front')[0];
+			}
+		}
+		// if vertical
+		else if(isHorizontal == false) {
+			// if there's another row vertically
+			if(getNextSquareRow) {
+				var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
+				//return the square
+				return getNextSquareColumn[0].getElementsByClassName('front')[0];
+			}
+		}
 	}
 }
 
