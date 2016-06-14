@@ -13,17 +13,17 @@ var errorMessageHolder;
 // ****************************** game stuff ******************************
 
 // messing with stuff
-function newGame(grid1, grid2) {
-	this.grid1 = grid1;
-	this.grid2 = grid2;
-}
-newGame.prototype.turn = function() {
-	if(player1) {
+// function newGame(grid1, grid2) {
+// 	this.grid1 = grid1;
+// 	this.grid2 = grid2;
+// }
+// newGame.prototype.turn = function() {
+// 	if(player1) {
 
-	} else if(player2) {
+// 	} else if(player2) {
 
-	}
-}
+// 	}
+// }
 
 // ****************************** grid stuff ******************************
 // use vectors for grid coordinates
@@ -194,10 +194,50 @@ Ship.prototype.placeShip = function(startingVector) {
 
 };
 
+// prototypal inheritance!
+// not sure if we need the horizontalOrientation parameter, but it's sorta baked in right now
+function PatrolBoat(horizontalOrientation) {
+	this.size = 2;
+	this.horizontalOrientation = horizontalOrientation;
+	this.name = "patrol boat";
+	this.symbol = "P";
+};
+PatrolBoat.prototype = Object.create(Ship.prototype);
+function Destroyer(horizontalOrientation) {
+	this.size = 3;
+	this.horizontalOrientation = horizontalOrientation;
+	this.name = "destroyer";
+	this.symbol = "D";
+};
+Destroyer.prototype = Object.create(Ship.prototype);
+function Submarine(horizontalOrientation) {
+	this.size = 3;
+	this.horizontalOrientation = horizontalOrientation;
+	this.name = "submarine";
+	this.symbol = "S";
+};
+Submarine.prototype = Object.create(Ship.prototype);
+function Battleship(horizontalOrientation) {
+	this.size = 4;
+	this.horizontalOrientation = horizontalOrientation;
+	this.name = "battleship";
+	this.symbol = "B";
+};
+Battleship.prototype = Object.create(Ship.prototype);
+function AircraftCarrier(horizontalOrientation) {
+	this.size = 5;
+	this.horizontalOrientation = horizontalOrientation;
+	this.name = "aircraft carrier";
+	this.symbol = "A";
+};
+AircraftCarrier.prototype = Object.create(Ship.prototype);
+
+// ****************************** game stuff ******************************
+
 // add this to the battleshipGame object?
 // function to grab user input from the DOM, create the ship, and then place the ship in the grid
 // can probably add getGridSquare() to this
-function createShip(ship) {
+battleshipGame.createShip = function(ship) {
 	function paintShipInDOM(classToAdd, permanent) {
 		ship.startingVector = currentStartingVector;
 		// for horizontal
@@ -375,7 +415,7 @@ function createShip(ship) {
 			// should we try to place the next ship?
 			if(shipBeingPlaced < battleshipGame.ships.length) {
 				// yes, place the next ship
-				createShip(battleshipGame.ships[shipBeingPlaced]);
+				battleshipGame.createShip(battleshipGame.ships[shipBeingPlaced]);
 			}
 			else if(shipBeingPlaced == battleshipGame.ships.length) {
 				// no, no more ships to place
@@ -389,47 +429,7 @@ function createShip(ship) {
 	// re-add the listener for the next ship
 	submitShipDetails.addEventListener('click', submitShipDetailsClick);
 
-}
-
-// prototypal inheritance!
-// not sure if we need the horizontalOrientation parameter, but it's sorta baked in right now
-function PatrolBoat(horizontalOrientation) {
-	this.size = 2;
-	this.horizontalOrientation = horizontalOrientation;
-	this.name = "patrol boat";
-	this.symbol = "P";
-};
-PatrolBoat.prototype = Object.create(Ship.prototype);
-function Destroyer(horizontalOrientation) {
-	this.size = 3;
-	this.horizontalOrientation = horizontalOrientation;
-	this.name = "destroyer";
-	this.symbol = "D";
-};
-Destroyer.prototype = Object.create(Ship.prototype);
-function Submarine(horizontalOrientation) {
-	this.size = 3;
-	this.horizontalOrientation = horizontalOrientation;
-	this.name = "submarine";
-	this.symbol = "S";
-};
-Submarine.prototype = Object.create(Ship.prototype);
-function Battleship(horizontalOrientation) {
-	this.size = 4;
-	this.horizontalOrientation = horizontalOrientation;
-	this.name = "battleship";
-	this.symbol = "B";
-};
-Battleship.prototype = Object.create(Ship.prototype);
-function AircraftCarrier(horizontalOrientation) {
-	this.size = 5;
-	this.horizontalOrientation = horizontalOrientation;
-	this.name = "aircraft carrier";
-	this.symbol = "A";
-};
-AircraftCarrier.prototype = Object.create(Ship.prototype);
-
-// ****************************** turn stuff ******************************
+} // end battleshipGame.createShip()
 
 battleshipGame.guessLocation = function() {
 	// I created the thisGridSquare variable for the getYCoord function, which...
@@ -492,7 +492,7 @@ battleshipGame.guessLocation = function() {
 		console.log('game over');
 	}
 
-}
+} // end battleshipGame.guessLocation()
 
 // ship placement on DOM grid
 battleshipGame.beginPlacement = function() {
@@ -508,8 +508,11 @@ battleshipGame.beginPlacement = function() {
 
 	battleshipGame.ships = [ship1, ship2, ship3, ship4, ship5];
 	shipBeingPlaced = 0;
-	createShip(battleshipGame.ships[shipBeingPlaced]);
+	battleshipGame.createShip(battleshipGame.ships[shipBeingPlaced]);
 }
+
+// the functions below: getVectorFromDom(), placeHighlight(), removeHighlight(), and getGridSquare()
+// ...are just floating in the global scope right now
 
 // pass in a DOM element (a grid square) and you get its vector
 // could maybe use a lil' work
