@@ -467,9 +467,12 @@ battleshipGame.beginGuessing = function() {
 	var gridSquaresLocal = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
 	for(var i=0; i<gridSquaresLocal.length; i++) {
 		gridSquaresLocal[i].addEventListener('click', battleshipGame.guess);
+		gridSquaresLocal[i].style.cursor = 'url(http://cdn2.hubspot.net/hubfs/481197/Crosshair-059934-edited.png) 25 15, auto';
 	}
 	battleshipGame.health = 17;
 	battleshipGame.guesses = 0;
+	remainingHealth.innerHTML = battleshipGame.health;
+	totalGuesses.innerHTML = battleshipGame.guesses;
 }
 battleshipGame.resetBoard = function() {
 	var gridSquaresLocal = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
@@ -482,32 +485,31 @@ battleshipGame.resetBoard = function() {
 	}
 }
 // return a guess from the grid
-// basic functionality is here but this function needs work
-// guesses still increment on click of an already-guessed blank square
-// can probably fix this by setting "O" there on the grid
-// also adding the revealed class each time a grid square is clicked
-// this should only be added once
 battleshipGame.guess = function() {
 	var guessVector = getVectorFromDom(this);
-	if(grid.get(guessVector) != "X") {
+	// don't increment the number of guesses if this square is already guessed
+	if(grid.get(guessVector) != "X" && grid.get(guessVector) != "O") {
 		battleshipGame.guesses++;
 	}
-	if(grid.get(guessVector) != undefined && grid.get(guessVector) != "X") {
+	// if this square hasn't been guessed but has something in it
+	if(grid.get(guessVector) != undefined && grid.get(guessVector) != "X" && grid.get(guessVector) != "O") {
 		var thingInSquare = grid.get(guessVector);
 		this.getElementsByClassName('back')[0].innerHTML = thingInSquare;
 		battleshipGame.health--;
-		console.log('battleshipGame.health: ' + battleshipGame.health);
 		remainingHealth.innerHTML = battleshipGame.health;
-		grid.set(guessVector, "X")
+		grid.set(guessVector, "X");
+	} else if(grid.get(guessVector) == undefined) {
+		grid.set(guessVector, "O");
 	}
-	this.className += " revealed";
-	console.log('battleshipGame.guesses: ' + battleshipGame.guesses);
+	var regex = new RegExp("revealed")
+	if(regex.test(this.className) == false) {
+		this.className += " revealed";
+	}
 	totalGuesses.innerHTML = battleshipGame.guesses;
 	if(battleshipGame.health == 0) {
 		guessDetails.style.display = "none";
 		document.getElementsByClassName('grid')[0].style.display = "none";
-		console.log('Game over!');
-		document.getElementsByClassName('controls')[0].innerHTML = "<p>Game over!</p>";
+		document.getElementsByClassName('controls')[0].innerHTML = "<p class=\"game-over\">Game over!</p>";
 	}
 }
 
