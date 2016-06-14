@@ -1,6 +1,3 @@
-// to do:
-// need to prevent DOM placement of ships that don't fit on the grid
-
 // because scope
 var currentShipSize;
 var currentShipOrientation;
@@ -104,7 +101,8 @@ Ship.prototype.placeShip = function(startingVector) {
 				grid.isInside( startingVector.plus(new Vector(this.size-1, 0)) ) == true ) {
 
 			// if yes, is there anything in the way of where we're trying to place it?
-			for(var i=0; i<startingVector.x+this.size-1; i++) {
+			// for(var i=0; i<startingVector.x+this.size-1; i++) {
+			for(var i=0; i<this.size; i++) {
 				if( grid.get( startingVector.plus( new Vector(i,0) ) ) != undefined ) {
 					console.log("There's something in the way");
 					console.log( grid.get( startingVector.plus( new Vector(i,0) ) ) );
@@ -149,10 +147,11 @@ Ship.prototype.placeShip = function(startingVector) {
 				grid.isInside( startingVector.plus(new Vector(0, this.size-1)) ) == true ) {
 			
 			// if yes, is there anything in the way of where we're trying to place it?
-			for(var i=0; i<startingVector.y+this.size-1; i++) {
+			// for(var i=0; i<startingVector.y+this.size-1; i++) {
+			for(var i=0; i<this.size; i++) {
 				if( grid.get( startingVector.plus( new Vector(0,i) ) ) != undefined ) {
 					console.log("There's something in the way: ");
-					console.log( grid.get( startingVector.plus( new Vector(i,0) ) ) );
+					console.log( grid.get( startingVector.plus( new Vector(0,i) ) ) );
 					// setting cantPlaceShipBecauseSomethingElse to true so that we can evaluate...
 					// ...whether or not we're allowed to set a ship on the grid
 					cantPlaceShipBecauseSomethingElse = true;
@@ -254,6 +253,7 @@ function createShip(ship) {
 		currentShipOrientation = false;
 		ship.horizontalOrientation = false;
 	});
+	// this needs to be named and removed after each placement
 	document.addEventListener('keydown', function(e) {
 		if(e.which == 32) {
 			if(currentShipOrientation == true) {
@@ -281,20 +281,37 @@ function createShip(ship) {
 
 	// I had to name this function because you can't remove a listener for an anonymous function
 	function listenerFuncForGetVector() {
-		currentStartingVector = getVectorFromDom(this);
-		// bug
-		if(somethingInTheWay == false) {
-			console.log(currentStartingVector);
-			// this removes temporarily placed ships from the grid
-			// I feel like this snippet is getting repeated quite a bit
-			var gridSquaresLocal = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
-			for(var i=0; i<gridSquaresLocal.length; i++) {
-				var thisGridSquareLocal = gridSquaresLocal[i].getElementsByClassName('front');
-				thisGridSquareLocal[0].className = thisGridSquareLocal[0].className.replace(/placed-ship-temporary/,'');
-			}
-			paintShipInDOM('placed-ship-temporary', false);
-			shipIsUnplaceable = false;
+		var tempCurrentStartingVector = getVectorFromDom(this);
+		
+		// is the end vector on the grid?
+		var currentEndingVector;
+		if(ship.horizontalOrientation == true) {
+			currentEndingVector = tempCurrentStartingVector.plus(new Vector(ship.size-1,0));
+		} else if(ship.horizontalOrientation == false) {
+			currentEndingVector = tempCurrentStartingVector.plus(new Vector(0,ship.size-1));
 		}
+
+		// if the whole ship fits in the grid
+		if(grid.isInside(currentEndingVector) == true) {
+			// if nothing is in the way
+			if(somethingInTheWay == false) {
+				currentStartingVector = getVectorFromDom(this);
+				// console.log(currentStartingVector);
+				// this removes temporarily placed ships from the grid
+				// I feel like this snippet is getting repeated quite a bit
+				var gridSquaresLocal = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
+				for(var i=0; i<gridSquaresLocal.length; i++) {
+					var thisGridSquareLocal = gridSquaresLocal[i].getElementsByClassName('front');
+					thisGridSquareLocal[0].className = thisGridSquareLocal[0].className.replace(/placed-ship-temporary/,'');
+				}
+				paintShipInDOM('placed-ship-temporary', false);
+				shipIsUnplaceable = false;
+			}
+			// else if(somethingInTheWay == true) {
+			// 	shipIsUnplaceable = true;
+			// }
+		}
+
 	}
 
 	for(var i=0; i<gridSquares.length; i++) {
@@ -354,7 +371,6 @@ function createShip(ship) {
 				thisGridSquareLocal[0].className = thisGridSquareLocal[0].className.replace(/placed-ship-temporary/,'');
 			}
 			paintShipInDOM('placed-ship', true);
-
 
 			// should we try to place the next ship?
 			if(shipBeingPlaced < battleshipGame.ships.length) {
@@ -549,10 +565,6 @@ function placeHighlight() {
 				if (grid.get(thisVector.plus( new Vector(i,0) )) != undefined) {
 					// set somethingInTheWay to true
 					somethingInTheWay = true;
-					// this is just for troubleshooting, but I'm logging the vector where we're hitting something
-					if(somethingInTheWay == true) {
-						console.log(thisVector.plus( new Vector(i,0) ));
-					}
 					// no need to loop any longer because there was something in the way
 					break;
 				}
@@ -598,10 +610,6 @@ function placeHighlight() {
 				if (grid.get(thisVector.plus( new Vector(0,i) )) != undefined) {
 					// set somethingInTheWay to true
 					somethingInTheWay = true;
-					// this is just for troubleshooting, but I'm logging the vector where we're hitting something
-					if(somethingInTheWay == true) {
-						console.log(thisVector.plus( new Vector(0,i) ));
-					}
 					// no need to loop any longer because there was something in the way
 					break;
 				}
