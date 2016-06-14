@@ -25,8 +25,12 @@
 .flip-container {
 	perspective: 1000px;
 }
+
 /* flip the pane when hovered */
-.flip-container:hover .flipper, .flip-container.hover .flipper {
+/*.flip-container:hover .flipper, .flip-container.hover .flipper {
+	transform: rotateY(180deg);
+}*/
+.flip-container.revealed .flipper  {
 	transform: rotateY(180deg);
 }
 
@@ -65,4 +69,12 @@
 .back {
 	transform: rotateY(180deg);
 	margin-top: 6px;
+}
+.front.placed-ship {
+	/*  ¯\_(ツ)_/¯  */
+	background-color: blue!important;
+}
+.front.placed-ship-temporary {
+	/*  ¯\_(ツ)_/¯  */
+	background-color: green!important;
 }

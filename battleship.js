@@ -1,3 +1,7 @@
+// because scope
+var currentShipSize;
+var currentShipOrientation;
+
 var battleshipGame = {
 	ships: []
 };
@@ -5,6 +9,21 @@ var grid;
 var columns = [null,'A','B','C','D','E','F','G','H','I','J'];
 var shipBeingPlaced = 0;
 var errorMessageHolder;
+
+// ****************************** game stuff ******************************
+
+// messing with stuff
+// function newGame(grid1, grid2) {
+// 	this.grid1 = grid1;
+// 	this.grid2 = grid2;
+// }
+// newGame.prototype.turn = function() {
+// 	if(player1) {
+
+// 	} else if(player2) {
+
+// 	}
+// }
 
 // ****************************** grid stuff ******************************
 // use vectors for grid coordinates
@@ -60,6 +79,7 @@ Grid.prototype.paintBoard = function() {
 		this.board = this.board + "\n";
 	}
 	console.log(grid.board);
+	console.log(grid.space);
 }
 
 // ****************************** ship stuff ******************************
@@ -81,10 +101,12 @@ Ship.prototype.placeShip = function(startingVector) {
 				grid.isInside( startingVector.plus(new Vector(this.size-1, 0)) ) == true ) {
 
 			// if yes, is there anything in the way of where we're trying to place it?
-			for(var i=0; i<startingVector.x+this.size; i++) {
+			// for(var i=0; i<startingVector.x+this.size-1; i++) {
+			for(var i=0; i<this.size; i++) {
 				if( grid.get( startingVector.plus( new Vector(i,0) ) ) != undefined ) {
 					console.log("There's something in the way");
 					console.log( grid.get( startingVector.plus( new Vector(i,0) ) ) );
+					console.log(startingVector.plus(new Vector(i,0)));
 					// setting cantPlaceShipBecauseSomethingElse to true so that we can evaluate...
 					// ...whether or not we're allowed to set a ship on the grid
 					cantPlaceShipBecauseSomethingElse = true;
@@ -125,10 +147,11 @@ Ship.prototype.placeShip = function(startingVector) {
 				grid.isInside( startingVector.plus(new Vector(0, this.size-1)) ) == true ) {
 			
 			// if yes, is there anything in the way of where we're trying to place it?
-			for(var i=0; i<startingVector.y+this.size; i++) {
+			// for(var i=0; i<startingVector.y+this.size-1; i++) {
+			for(var i=0; i<this.size; i++) {
 				if( grid.get( startingVector.plus( new Vector(0,i) ) ) != undefined ) {
 					console.log("There's something in the way: ");
-					console.log( grid.get( startingVector.plus( new Vector(i,0) ) ) );
+					console.log( grid.get( startingVector.plus( new Vector(0,i) ) ) );
 					// setting cantPlaceShipBecauseSomethingElse to true so that we can evaluate...
 					// ...whether or not we're allowed to set a ship on the grid
 					cantPlaceShipBecauseSomethingElse = true;
@@ -171,71 +194,6 @@ Ship.prototype.placeShip = function(startingVector) {
 
 };
 
-// function to grab user input from the DOM, create the ship, and then place the ship in the grid
-function createShip(ship) {
-	
-	// add relevant info about the ship that's being placed into the ship details section and then display that section
-	document.getElementById('current-ship-name').innerHTML = ship.name;
-	document.getElementById('current-ship-size').innerHTML = ship.size;
-	document.getElementById('ship-details').style.display = 'block';
-
-	var submitShipDetails = document.getElementById('shipPlace');
-	// function that runs on click of the place ship button
-	function SubmitShipDetailsClick() {
-		
-		// remove the listener on the button, or else madness
-		submitShipDetails.removeEventListener('click', SubmitShipDetailsClick);
-
-		// reset any previous error message from trying to place a ship
-		errorMessageHolder.style.display = 'none';
-		errorMessageHolder.innerHTML ='';
-
-		// get the vector coordinates and ship orientation from user input
-		var startingX = parseInt(document.getElementById('x-coord').value);
-		var startingY = parseInt(document.getElementById('y-coord').value);
-		var shipOrientationRadios = document.getElementsByName('orientation');
-		var shipOrientation = true;
-		for(var i=0; i<shipOrientationRadios.length; i++) {
-			if(shipOrientationRadios[i].checked) {
-				shipOrientation = shipOrientationRadios[i].value;
-				break;
-			}
-		}
-		// convert string to boolean for ship orientation
-		if(shipOrientation == "true") {
-			shipOrientation = true;
-		} else {
-			shipOrientation = false;
-		}
-
-		// place the ship
-		ship.startingVector = new Vector(startingX, startingY);
-		ship.horizontalOrientation = shipOrientation;
-		ship.placeShip(ship.startingVector);
-
-		// reset the form inputs
-		document.getElementById('x-coord').value = "";
-		document.getElementById('y-coord').value = "";
-		shipOrientationRadios[0].checked = true;
-
-		// should we try to place the next ship?
-		if(shipBeingPlaced < battleshipGame.ships.length) {
-			// yes, place the next ship
-			createShip(battleshipGame.ships[shipBeingPlaced]);
-		}
-		else if(shipBeingPlaced == battleshipGame.ships.length) {
-			// no, no more ships to place
-			// hide the form input section
-			document.getElementById('ship-details').style.display = 'none';
-			// paint the grid
-			grid.paintBoard();
-		}
-	}
-	// re-add the listener for the next ship
-	submitShipDetails.addEventListener('click', SubmitShipDetailsClick);
-
-}
-
 // prototypal inheritance!
 // not sure if we need the horizontalOrientation parameter, but it's sorta baked in right now
 function PatrolBoat(horizontalOrientation) {
@@ -274,19 +232,211 @@ function AircraftCarrier(horizontalOrientation) {
 };
 AircraftCarrier.prototype = Object.create(Ship.prototype);
 
-// ****************************** turn stuff ******************************
+// ****************************** game stuff ******************************
 
-// coming back to this
-// function Turn() {}
-// Turn.prototype.guessLocation = function(e) {
-// 	e.preventDefault();
-// 	console.log(this);
-// }
+// add this to the battleshipGame object?
+// function to grab user input from the DOM, create the ship, and then place the ship in the grid
+// can probably add getGridSquare() to this
+battleshipGame.createShip = function(ship) {
+	function paintShipInDOM(classToAdd, permanent) {
+		ship.startingVector = currentStartingVector;
+		// for horizontal
+		if(ship.horizontalOrientation == true) {
+			// can create a function for this to make DRY
+			for(var i=0; i<currentShipSize; i++) {
+				var nextSquare = ship.startingVector.plus( new Vector(i,0) );
+				var nextSquareRow = "row" + nextSquare.y;
+				var nextSquareColumn = "column" + columns[nextSquare.x];
+				var getNextSquareRow = document.getElementById(nextSquareRow);
+				var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
+				var testFront = getNextSquareColumn[0].getElementsByClassName('front');
+				testFront[0].className += " " + classToAdd;
+				if(permanent == true) {
+					testFront[0].innerHTML = ship.symbol;
+				}
+			}
+		}
+		// for vertical
+		else if(ship.horizontalOrientation == false) {
+			for(var i=0; i<currentShipSize; i++) {
+				var nextSquare = ship.startingVector.plus( new Vector(0,i) );
+				var nextSquareRow = "row" + nextSquare.y;
+				var nextSquareColumn = "column" + columns[nextSquare.x];
+				var getNextSquareRow = document.getElementById(nextSquareRow);
+				var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
+				var testFront = getNextSquareColumn[0].getElementsByClassName('front');
+				testFront[0].className += " " + classToAdd;
+				if(permanent == true) {
+					testFront[0].innerHTML = ship.symbol;
+				}
+			}
+		}
+	}
+
+	// on click this value will reset to whichever grid vector was clicked
+	var currentStartingVector;
+	ship.horizontalOrientation = true;
+	// this really just indicates if the ship has been placed
+	// if it has, it's set to false, meaning it can be placed
+	// it's a fix for a bug where this (whether or not the ship can be placed) was being reset to false when hovering over
+	// ...a grid square where the ship would be unplaceable, even if where you had actually clicked was placeable=
+	var shipIsUnplaceable = true;
+
+	// for changing ship orientation on button click in form
+	var buttonHorizontal = document.getElementById('button-horizontal');
+	var buttonVertical = document.getElementById('button-vertical');
+	buttonHorizontal.addEventListener('click', function() {
+		currentShipOrientation = true;
+		ship.horizontalOrientation = true;
+	});
+	buttonVertical.addEventListener('click', function() {
+		currentShipOrientation = false;
+		ship.horizontalOrientation = false;
+	});
+	// this needs to be named and removed after each placement
+	document.addEventListener('keydown', function(e) {
+		if(e.which == 32) {
+			if(currentShipOrientation == true) {
+				currentShipOrientation = false;
+				ship.horizontalOrientation = false;
+			} else if(currentShipOrientation == false) {
+				currentShipOrientation = true;
+				ship.horizontalOrientation = true;
+			}
+		}
+	});
+
+	currentShipOrientation = true;
+	currentShipSize = ship.size;
+
+	// show form stuff
+	// add relevant info about the ship that's being placed into the ship details section and then display that section
+	document.getElementById('current-ship-name').innerHTML = ship.name;
+	document.getElementById('current-ship-size').innerHTML = ship.size;
+	document.getElementById('ship-details').style.display = 'block';
+
+
+	// add listeners to all grid squares
+	var gridSquares = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
+
+	// I had to name this function because you can't remove a listener for an anonymous function
+	function listenerFuncForGetVector() {
+		var tempCurrentStartingVector = getVectorFromDom(this);
+		
+		// is the end vector on the grid?
+		var currentEndingVector;
+		if(ship.horizontalOrientation == true) {
+			currentEndingVector = tempCurrentStartingVector.plus(new Vector(ship.size-1,0));
+		} else if(ship.horizontalOrientation == false) {
+			currentEndingVector = tempCurrentStartingVector.plus(new Vector(0,ship.size-1));
+		}
+
+		// if the whole ship fits in the grid
+		if(grid.isInside(currentEndingVector) == true) {
+			// if nothing is in the way
+			if(somethingInTheWay == false) {
+				currentStartingVector = getVectorFromDom(this);
+				// console.log(currentStartingVector);
+				// this removes temporarily placed ships from the grid
+				// I feel like this snippet is getting repeated quite a bit
+				var gridSquaresLocal = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
+				for(var i=0; i<gridSquaresLocal.length; i++) {
+					var thisGridSquareLocal = gridSquaresLocal[i].getElementsByClassName('front');
+					thisGridSquareLocal[0].className = thisGridSquareLocal[0].className.replace(/placed-ship-temporary/,'');
+				}
+				paintShipInDOM('placed-ship-temporary', false);
+				shipIsUnplaceable = false;
+			}
+			// else if(somethingInTheWay == true) {
+			// 	shipIsUnplaceable = true;
+			// }
+		}
+
+	}
+
+	for(var i=0; i<gridSquares.length; i++) {
+		// gridSquares[i].addEventListener('click', battleshipGame.guessLocation);
+		gridSquares[i].addEventListener('mouseenter', placeHighlight);
+		gridSquares[i].addEventListener('mouseleave', removeHighlight);
+		gridSquares[i].addEventListener('click', listenerFuncForGetVector);
+	}
+
+	// button to confirm placement
+	var submitShipDetails = document.getElementById('shipPlace');
+	// function that runs on click of the place ship button
+	function submitShipDetailsClick() {
+		
+		if(shipIsUnplaceable == false) {
+
+			// remove the listener on the button, or else madness
+			submitShipDetails.removeEventListener('click', submitShipDetailsClick);
+			// remove some other listeners
+			for(var i=0; i<gridSquares.length; i++) {
+				gridSquares[i].removeEventListener('mouseenter', placeHighlight);
+				gridSquares[i].removeEventListener('mouseleave', removeHighlight);
+				gridSquares[i].removeEventListener('click', listenerFuncForGetVector);
+			}
+
+			// reset any previous error message from trying to place a ship
+			errorMessageHolder.style.display = 'none';
+			errorMessageHolder.innerHTML ='';
+
+			// get the vector coordinates and ship orientation from user input
+			var startingX = currentStartingVector.x;
+			var startingY = currentStartingVector.y;
+			var shipOrientationRadios = document.getElementsByName('orientation');
+			// currentShipOrientation = true;
+			// for(var i=0; i<shipOrientationRadios.length; i++) {
+			// 	if(shipOrientationRadios[i].checked) {
+			// 		currentShipOrientation = shipOrientationRadios[i].value;
+			// 		break;
+			// 	}
+			// }
+			// convert string to boolean for ship orientation
+			if(currentShipOrientation == "true") {
+				// currentShipOrientation = true;
+				this.horizontalOrientation = true;
+			} else {
+				// currentShipOrientation = false;
+				this.horizontalOrientation = false;
+			}
+
+			// place the ship
+			ship.startingVector = currentStartingVector;
+			ship.horizontalOrientation = currentShipOrientation;
+			ship.placeShip(ship.startingVector);
+			var gridSquaresLocal = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
+			for(var i=0; i<gridSquaresLocal.length; i++) {
+				var thisGridSquareLocal = gridSquaresLocal[i].getElementsByClassName('front');
+				thisGridSquareLocal[0].className = thisGridSquareLocal[0].className.replace(/placed-ship-temporary/,'');
+			}
+			paintShipInDOM('placed-ship', true);
+
+			// should we try to place the next ship?
+			if(shipBeingPlaced < battleshipGame.ships.length) {
+				// yes, place the next ship
+				battleshipGame.createShip(battleshipGame.ships[shipBeingPlaced]);
+			}
+			else if(shipBeingPlaced == battleshipGame.ships.length) {
+				// no, no more ships to place
+				// hide the form input section
+				document.getElementById('ship-details').style.display = 'none';
+				// paint the grid
+				grid.paintBoard();
+			}
+		}
+	}
+	// re-add the listener for the next ship
+	submitShipDetails.addEventListener('click', submitShipDetailsClick);
+
+} // end battleshipGame.createShip()
+
 battleshipGame.guessLocation = function() {
 	// I created the thisGridSquare variable for the getYCoord function, which...
 	// ...returns the Y coordinate of the grid square that's clicked
 	// I did this because I don't feel like figuring out how to...
 	// ...bind 'this' to that function
+
 	var thisGridSquare = this;
 	// the way I'm getting columnLetter seems janky, but works for now
 	var columnLetter = this.className[6];
@@ -305,6 +455,232 @@ battleshipGame.guessLocation = function() {
 	var guessVector = new Vector(xCoord, yCoord);
 	console.log(guessVector);
 	console.log(grid.get(guessVector));
+
+	if(grid.get(guessVector) == undefined || grid.get(guessVector) == "O") {
+		console.log('miss');
+		grid.set(guessVector, 'O');
+	} else {
+		var thingAtGridSquare = grid.get(guessVector);
+		console.log(thingAtGridSquare);
+		grid.set(guessVector, 'X');
+
+		switch(thingAtGridSquare) {
+			case 'P':
+				console.log('you found a P');
+				break;
+			case 'D':
+				console.log('you found a D');
+				break;
+			case 'S':
+				console.log('you found an S');
+				break;
+			case 'B':
+				console.log('you found a B');
+				break;
+			case 'A':
+				console.log('you found an A');
+				break;
+			default:
+				console.log('wtf');
+		}
+
+	}
+
+	grid.paintBoard();
+
+	if(battleshipGame.ships.length == 0) {
+		console.log('game over');
+	}
+
+} // end battleshipGame.guessLocation()
+
+// ship placement on DOM grid
+battleshipGame.beginPlacement = function() {
+	this.blur();
+	var somethingInTheWay = false;
+
+	grid = new Grid(10,10);
+	var ship1 = new PatrolBoat();
+	var ship2 = new Destroyer();
+	var ship3 = new Submarine();
+	var ship4 = new Battleship();
+	var ship5 = new AircraftCarrier();
+
+	battleshipGame.ships = [ship1, ship2, ship3, ship4, ship5];
+	shipBeingPlaced = 0;
+	battleshipGame.createShip(battleshipGame.ships[shipBeingPlaced]);
+}
+
+// the functions below: getVectorFromDom(), placeHighlight(), removeHighlight(), and getGridSquare()
+// ...are just floating in the global scope right now
+
+// pass in a DOM element (a grid square) and you get its vector
+// could maybe use a lil' work
+function getVectorFromDom(elementFromDom) {
+	var thisGridSquare = elementFromDom;
+	// the way I'm getting columnLetter seems janky, but works for now
+	var columnLetter = elementFromDom.className[6];
+	var xCoord = columns.indexOf(columnLetter);
+
+	// this could probably just be an IIFE
+	var yCoord = Number(getYCoord());
+	function getYCoord() {
+		if(thisGridSquare.parentNode.id[4] != undefined) {
+			return thisGridSquare.parentNode.id[3] + thisGridSquare.parentNode.id[4];
+		} else {
+			return thisGridSquare.parentNode.id[3];
+		}
+	}
+	return new Vector(xCoord, yCoord);
+
+}
+
+// abandon hope all ye who enter here
+// this function highlights in yellow any grid squares where you're trying to place a ship
+function placeHighlight() {
+
+	// var for whether or not something is in the way of where you're trying to place a ship
+	somethingInTheWay = false;
+	// current vector of where you're placing ship
+	// this gets updated in the various loops below
+	var thisVector = getVectorFromDom(this);
+
+	// if this is a horizontal ship
+	if(currentShipOrientation == true) {
+		// need to highlight red if part of the ship falls off the grid
+		if( grid.isInside( thisVector.plus(new Vector(currentShipSize-1, 0)) ) == false ) {
+			// iterate through each grid square of the ship
+			for(var i=0; i<currentShipSize; i++) {
+				// update the grid square we're looking at as we loop through
+				var currentGridSquare = getGridSquare(thisVector, true, i);
+				// if the grid square is on the grid, set the color to red
+				if(currentGridSquare != undefined) {
+					currentGridSquare.style.backgroundColor = 'red';
+				}
+			}
+		}
+		// the whole ship is inside the grid
+		// now we check to see if there's anything in the way of placing the ship
+		else {
+			// iterate through each grid square of the ship
+			for(var i=0; i<currentShipSize; i++) {
+				// if we don't get an undefined response from the grid.get() method, it means there's something in the way
+				if (grid.get(thisVector.plus( new Vector(i,0) )) != undefined) {
+					// set somethingInTheWay to true
+					somethingInTheWay = true;
+					// no need to loop any longer because there was something in the way
+					break;
+				}
+			}
+
+			// now highlight the whole ship red or yellow, depending on if something was in the way
+			// iterate through each grid square of the ship
+			for(var i=0; i<currentShipSize; i++) {
+				// the square we're looking at as we loop through
+				var currentGridSquare = getGridSquare(thisVector, true, i);
+				// highlight red because something's in the way
+				if(somethingInTheWay == true) {
+					currentGridSquare.style.backgroundColor = "red";
+				}
+				// highlight yellow because you're good to go
+				else {
+					currentGridSquare.style.backgroundColor = "yellow";
+				}
+			}
+		}
+	}
+	// if this is a vertical ship
+	else if(currentShipOrientation == false) {
+		// need to highlight red if part of the ship falls off the grid
+		if( grid.isInside( thisVector.plus(new Vector(0,currentShipSize-1)) ) == false ) {
+			// iterate through each grid square of the ship
+			for(var i=0; i<currentShipSize; i++) {
+				// update the grid square we're looking at as we loop through
+				var currentGridSquare = getGridSquare(thisVector, false, i);
+				// if the grid square is on the grid, set the color to red
+				if(currentGridSquare != undefined) {
+					currentGridSquare.style.backgroundColor = "red";
+				}
+			}
+		}
+		// the whole ship is inside the grid
+		// now we check to see if there's anything in the way of placing the ship
+		else {
+			// iterate through each grid square of the ship
+			for(var i=0; i<currentShipSize; i++) {
+				// if we don't get an undefined response from the grid.get() method, it means there's something in the way
+				// bug?
+				if (grid.get(thisVector.plus( new Vector(0,i) )) != undefined) {
+					// set somethingInTheWay to true
+					somethingInTheWay = true;
+					// no need to loop any longer because there was something in the way
+					break;
+				}
+			}
+
+			// now highlight the whole ship red or yellow, depending on if something was in the way
+			// iterate through each grid square of the ship
+			for(var i=0; i<currentShipSize; i++) {
+				// the square we're looking at as we loop through
+				var currentGridSquare = getGridSquare(thisVector, false, i);
+				// highlight red because something's in the way
+				if(somethingInTheWay == true) {
+					currentGridSquare.style.backgroundColor = "red";
+				}
+				// highlight yellow because you're good to go
+				else {
+					currentGridSquare.style.backgroundColor = "yellow";
+				}
+			}
+		}
+	}
+} // end placeHighlight()
+
+// function for removing background color of ships that are no longer being highlighted during placement
+function removeHighlight() {
+	var gridSquaresLocal = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
+	for(var i=0; i<gridSquaresLocal.length; i++) {
+		var thisGridSquareLocal = gridSquaresLocal[i].getElementsByClassName('front');
+		thisGridSquareLocal[0].style.backgroundColor = "black";
+	}
+}
+
+// this function is used inside a loop to get all DOM grid squares that are being highlighted
+// namely, this is used several times in the placeHighlight() function
+// could probably scope it only to that function
+function getGridSquare(startingVector, isHorizontal, iterator) {
+	var vectorToAdd;
+	if(isHorizontal == true) {
+		vectorToAdd = new Vector(iterator,0);
+	} else if(isHorizontal == false) {
+		vectorToAdd = new Vector(0,iterator);
+	}
+	var nextSquare = startingVector.plus(vectorToAdd);
+	// if the square is inside the grid
+	if(grid.isInside(nextSquare) == true) {
+		var nextSquareRow = "row" + nextSquare.y;
+		var nextSquareColumn = "column" + columns[nextSquare.x];
+		var getNextSquareRow = document.getElementById(nextSquareRow);
+		var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
+		// if horizontal
+		if(isHorizontal == true) {
+			// if there's another square horizontally
+			if(getNextSquareColumn.length != 0) {
+				var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
+				// return the square
+				return getNextSquareColumn[0].getElementsByClassName('front')[0];
+			}
+		}
+		// if vertical
+		else if(isHorizontal == false) {
+			// if there's another row vertically
+			if(getNextSquareRow) {
+				var getNextSquareColumn = getNextSquareRow.getElementsByClassName(nextSquareColumn);
+				//return the square
+				return getNextSquareColumn[0].getElementsByClassName('front')[0];
+			}
+		}
+	}
 }
 
 // ****************************** DOM stuff ******************************
@@ -314,30 +690,23 @@ window.onload = function() {
 	var gridButton = document.getElementById('gridButton');
 	var startButton = document.getElementById('startButton');
 	
-	// on click of the start game button
-	startButton.addEventListener('click', function(e) {
-		e.preventDefault();
-
-		// for a standard 10x10 game
-		grid = new Grid(10,10);
-		var ship1 = new PatrolBoat();
-		var ship2 = new Destroyer();
-		var ship3 = new Submarine();
-		var ship4 = new Battleship();
-		var ship5 = new AircraftCarrier();
-		battleshipGame.ships = [ship1, ship2, ship3, ship4, ship5];
-		// shipBeingPlaced is the variable that places the current ship we're on
-		// it's incremented by 1 when a ship is successfully set on the grid
-		// it's used as the index for the battleshipGame.ships array
-		shipBeingPlaced = 0;
-		createShip(battleshipGame.ships[shipBeingPlaced]);
-
-	}); // end startButton click
+	// trying DOM click placement for now
+	startButton.addEventListener('click', battleshipGame.beginPlacement);
 
 	// add the guessLocation listener to all grid squares
-	var gridSquares = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
-	for(var i=0; i<gridSquares.length; i++) {
-		gridSquares[i].addEventListener('click', battleshipGame.guessLocation);
-	}
+	// var gridSquares = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
+	// for(var i=0; i<gridSquares.length; i++) {
+	// 	gridSquares[i].addEventListener('click', battleshipGame.guessLocation);
+	// 	// testing
+	// 	gridSquares[i].addEventListener('mouseenter', placeHighlight);
+	// 	gridSquares[i].addEventListener('mouseleave', removeHighlight);
+	// }
 
 }
+
+// this belongs elsewhere
+// if(this.classList.contains('revealed')) {
+// 	this.className = this.className.replace(/ revealed/,'');
+// } else {
+// 	this.className += " revealed";
+// }
