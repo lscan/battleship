@@ -1,3 +1,6 @@
+// to do:
+// need to prevent DOM placement of ships that don't fit on the grid
+
 // because scope
 var currentShipSize;
 var currentShipOrientation;
@@ -194,6 +197,7 @@ Ship.prototype.placeShip = function(startingVector) {
 
 // add this to the battleshipGame object?
 // function to grab user input from the DOM, create the ship, and then place the ship in the grid
+// can probably add getGridSquare() to this
 function createShip(ship) {
 	function paintShipInDOM(classToAdd, permanent) {
 		ship.startingVector = currentStartingVector;
@@ -233,6 +237,11 @@ function createShip(ship) {
 	// on click this value will reset to whichever grid vector was clicked
 	var currentStartingVector;
 	ship.horizontalOrientation = true;
+	// this really just indicates if the ship has been placed
+	// if it has, it's set to false, meaning it can be placed
+	// it's a fix for a bug where this (whether or not the ship can be placed) was being reset to false when hovering over
+	// ...a grid square where the ship would be unplaceable, even if where you had actually clicked was placeable=
+	var shipIsUnplaceable = true;
 
 	// for changing ship orientation on button click in form
 	var buttonHorizontal = document.getElementById('button-horizontal');
@@ -273,6 +282,7 @@ function createShip(ship) {
 	// I had to name this function because you can't remove a listener for an anonymous function
 	function listenerFuncForGetVector() {
 		currentStartingVector = getVectorFromDom(this);
+		// bug
 		if(somethingInTheWay == false) {
 			console.log(currentStartingVector);
 			// this removes temporarily placed ships from the grid
@@ -283,6 +293,7 @@ function createShip(ship) {
 				thisGridSquareLocal[0].className = thisGridSquareLocal[0].className.replace(/placed-ship-temporary/,'');
 			}
 			paintShipInDOM('placed-ship-temporary', false);
+			shipIsUnplaceable = false;
 		}
 	}
 
@@ -298,8 +309,7 @@ function createShip(ship) {
 	// function that runs on click of the place ship button
 	function submitShipDetailsClick() {
 		
-		console.log(somethingInTheWay);
-		if(somethingInTheWay == false) {
+		if(shipIsUnplaceable == false) {
 
 			// remove the listener on the button, or else madness
 			submitShipDetails.removeEventListener('click', submitShipDetailsClick);
