@@ -3,12 +3,18 @@ var currentShipSize;
 var currentShipOrientation;
 
 var battleshipGame = {
-	ships: []
+	ships: [],
+	health: undefined,
+	guesses:undefined
 };
 var grid;
 var columns = [null,'A','B','C','D','E','F','G','H','I','J'];
 var shipBeingPlaced = 0;
 var errorMessageHolder;
+
+var remainingHealth;
+var totalGuesses;
+var guessDetails;
 
 // ****************************** game stuff ******************************
 
@@ -423,6 +429,8 @@ battleshipGame.createShip = function(ship) {
 				document.getElementById('ship-details').style.display = 'none';
 				// paint the grid
 				grid.paintBoard();
+				// show button to begin guessing
+				guessButton.style.display = "block";
 			}
 		}
 	}
@@ -431,71 +439,9 @@ battleshipGame.createShip = function(ship) {
 
 } // end battleshipGame.createShip()
 
-battleshipGame.guessLocation = function() {
-	// I created the thisGridSquare variable for the getYCoord function, which...
-	// ...returns the Y coordinate of the grid square that's clicked
-	// I did this because I don't feel like figuring out how to...
-	// ...bind 'this' to that function
-
-	var thisGridSquare = this;
-	// the way I'm getting columnLetter seems janky, but works for now
-	var columnLetter = this.className[6];
-	var xCoord = columns.indexOf(columnLetter);
-
-	// this could probably just be an IIFE
-	var yCoord = Number(getYCoord());
-	function getYCoord() {
-		if(thisGridSquare.parentNode.id[4] != undefined) {
-			return thisGridSquare.parentNode.id[3] + thisGridSquare.parentNode.id[4];
-		} else {
-			return thisGridSquare.parentNode.id[3];
-		}
-	}
-
-	var guessVector = new Vector(xCoord, yCoord);
-	console.log(guessVector);
-	console.log(grid.get(guessVector));
-
-	if(grid.get(guessVector) == undefined || grid.get(guessVector) == "O") {
-		console.log('miss');
-		grid.set(guessVector, 'O');
-	} else {
-		var thingAtGridSquare = grid.get(guessVector);
-		console.log(thingAtGridSquare);
-		grid.set(guessVector, 'X');
-
-		switch(thingAtGridSquare) {
-			case 'P':
-				console.log('you found a P');
-				break;
-			case 'D':
-				console.log('you found a D');
-				break;
-			case 'S':
-				console.log('you found an S');
-				break;
-			case 'B':
-				console.log('you found a B');
-				break;
-			case 'A':
-				console.log('you found an A');
-				break;
-			default:
-				console.log('wtf');
-		}
-
-	}
-
-	grid.paintBoard();
-
-	if(battleshipGame.ships.length == 0) {
-		console.log('game over');
-	}
-
-} // end battleshipGame.guessLocation()
-
 // ship placement on DOM grid
 battleshipGame.beginPlacement = function() {
+	startButton.style.display = "none";
 	this.blur();
 	var somethingInTheWay = false;
 
@@ -509,6 +455,60 @@ battleshipGame.beginPlacement = function() {
 	battleshipGame.ships = [ship1, ship2, ship3, ship4, ship5];
 	shipBeingPlaced = 0;
 	battleshipGame.createShip(battleshipGame.ships[shipBeingPlaced]);
+}
+
+// begin ability to guess where ships are in the grid
+battleshipGame.beginGuessing = function() {
+	guessDetails = document.getElementById('guess-details');
+	guessButton.style.display = "none";
+	guessDetails.style.display = "block";
+	//reset the board, but not the grid on the back-end
+	battleshipGame.resetBoard();
+	var gridSquaresLocal = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
+	for(var i=0; i<gridSquaresLocal.length; i++) {
+		gridSquaresLocal[i].addEventListener('click', battleshipGame.guess);
+	}
+	battleshipGame.health = 17;
+	battleshipGame.guesses = 0;
+}
+battleshipGame.resetBoard = function() {
+	var gridSquaresLocal = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
+	for(var i=0; i<gridSquaresLocal.length; i++) {
+		var thisGridSquareLocal = gridSquaresLocal[i].getElementsByClassName('front');
+		thisGridSquareLocal[0].className = thisGridSquareLocal[0].className.replace(/placed-ship/,'');
+		thisGridSquareLocal[0].innerHTML = "";
+		var thisGridSquareLocalBack = gridSquaresLocal[i].getElementsByClassName('back');
+		thisGridSquareLocalBack[0].innerHTML = "";
+	}
+}
+// return a guess from the grid
+// basic functionality is here but this function needs work
+// guesses still increment on click of an already-guessed blank square
+// can probably fix this by setting "O" there on the grid
+// also adding the revealed class each time a grid square is clicked
+// this should only be added once
+battleshipGame.guess = function() {
+	var guessVector = getVectorFromDom(this);
+	if(grid.get(guessVector) != "X") {
+		battleshipGame.guesses++;
+	}
+	if(grid.get(guessVector) != undefined && grid.get(guessVector) != "X") {
+		var thingInSquare = grid.get(guessVector);
+		this.getElementsByClassName('back')[0].innerHTML = thingInSquare;
+		battleshipGame.health--;
+		console.log('battleshipGame.health: ' + battleshipGame.health);
+		remainingHealth.innerHTML = battleshipGame.health;
+		grid.set(guessVector, "X")
+	}
+	this.className += " revealed";
+	console.log('battleshipGame.guesses: ' + battleshipGame.guesses);
+	totalGuesses.innerHTML = battleshipGame.guesses;
+	if(battleshipGame.health == 0) {
+		guessDetails.style.display = "none";
+		document.getElementsByClassName('grid')[0].style.display = "none";
+		console.log('Game over!');
+		document.getElementsByClassName('controls')[0].innerHTML = "<p>Game over!</p>";
+	}
 }
 
 // the functions below: getVectorFromDom(), placeHighlight(), removeHighlight(), and getGridSquare()
@@ -690,23 +690,13 @@ window.onload = function() {
 	var gridButton = document.getElementById('gridButton');
 	var startButton = document.getElementById('startButton');
 	
-	// trying DOM click placement for now
+	// listener to begin ship placement
 	startButton.addEventListener('click', battleshipGame.beginPlacement);
 
-	// add the guessLocation listener to all grid squares
-	// var gridSquares = document.getElementsByClassName('grid')[0].getElementsByTagName('td');
-	// for(var i=0; i<gridSquares.length; i++) {
-	// 	gridSquares[i].addEventListener('click', battleshipGame.guessLocation);
-	// 	// testing
-	// 	gridSquares[i].addEventListener('mouseenter', placeHighlight);
-	// 	gridSquares[i].addEventListener('mouseleave', removeHighlight);
-	// }
-
+	// listener to begin ship guessing on grid
+	// this will need to be adapted when we have server stuff working
+	var guessButton = document.getElementById('guessButton');
+	guessButton.addEventListener('click', battleshipGame.beginGuessing);
+	remainingHealth = document.getElementById('remaining-health');
+	totalGuesses = document.getElementById('total-guesses');
 }
-
-// this belongs elsewhere
-// if(this.classList.contains('revealed')) {
-// 	this.className = this.className.replace(/ revealed/,'');
-// } else {
-// 	this.className += " revealed";
-// }

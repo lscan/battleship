@@ -78,3 +78,9 @@
 	/*  ¯\_(ツ)_/¯  */
 	background-color: green!important;
 }
+#guessButton {
+	display: none;
+}
+#guess-details {
+	display: none;
+}
